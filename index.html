@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Focus Adventure Prototype</title>
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#24324a;--muted:#6c7890;--primary:#5b7cff;--line:#dfe5ef;--shadow:0 14px 36px rgba(36,50,74,.10)}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI","Noto Sans TC",Arial,sans-serif;background:linear-gradient(180deg,#edf3ff,#fffaf3);color:var(--text)}
+button{font:inherit}.app{max-width:460px;margin:auto;min-height:100vh;padding:14px 14px 94px}.topbar{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:800}
+.mode{border:0;background:#fff;border-radius:999px;padding:9px 13px;box-shadow:var(--shadow)}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin:12px 0}
+.progress{height:11px;background:#e9edf5;border-radius:999px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,#5b7cff,#8e9dff)}
+.hero{text-align:center;padding:26px 18px}.hero .icon{font-size:72px}.hero h1{font-size:28px;margin:8px 0}.hero p{color:var(--muted)}
+.primary,.secondary{width:100%;border-radius:18px;padding:16px;cursor:pointer}.primary{border:0;background:#5b7cff;color:#fff;font-weight:800;font-size:20px}.secondary{border:1px solid var(--line);background:#fff}
+.task{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #edf0f5}.task .right{margin-left:auto;color:var(--muted)}.wish{background:#fff6df}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(432px,calc(100% - 24px));display:grid;grid-template-columns:repeat(4,1fr);gap:7px;background:#fff;padding:9px;border-radius:22px;box-shadow:0 12px 28px rgba(36,50,74,.18)}
+.nav button{border:0;background:transparent;border-radius:14px;padding:9px 2px;color:var(--muted)}.nav button.active{background:#edf2ff;color:#385bd6;font-weight:700}.hidden{display:none!important}
+.stepdots{text-align:center;letter-spacing:8px;color:#aeb8ca}.stepdots .on{color:#5b7cff}.choicegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{border:1px solid var(--line);background:#fff;border-radius:18px;padding:18px 10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:18px;background:#21304c;color:#fff;padding:11px 16px;border-radius:999px;opacity:0;transition:.25s;z-index:99}.toast.show{opacity:1}
+.parentStats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f8faff;border:1px solid var(--line);border-radius:16px;padding:14px}.stat b{font-size:24px;display:block}.notice{background:#eef3ff}.reviewBtn{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:16px;padding:15px;margin:8px 0}.tags{display:flex;gap:8px;flex-wrap:wrap}.tag{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px}.tag.on{background:#fff0d5}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day{aspect-ratio:1;border-radius:13px;background:#f7f9fd;display:grid;place-items:center}.day.done{background:#fff2c7}.panelHead{display:flex;justify-content:space-between}.badge{background:#eef3ff;color:#385bd6;border-radius:999px;padding:6px 10px;font-weight:700}
+</style></head><body>
+<div class="toast" id="toast"></div><div class="app">
+<div class="topbar"><div class="brand">Focus Adventure</div><button class="mode" id="modeBtn">👨‍👩‍👦 家長模式</button></div>
+
+<main id="kids">
+<section id="kidsToday">
+<div class="panelHead"><div><b>☀️ 下午好，小勇者！</b><br><small>今天完成 3 / 5</small></div><div class="badge">⭐ <span id="stars">428</span></div></div>
+<div class="progress" style="margin:10px 0 14px"><i style="width:60%"></i></div>
+<div class="card hero"><div class="icon">🎒</div><h1>整理書包</h1><p>🔊 現在來整理書包</p><button class="primary" id="startTask">▶ 開始</button></div>
+<div class="card"><div class="task">✅ <b>晚餐任務</b></div><div class="task">▶️ <b>今日挑戰</b><span class="right">可開始</span></div><div class="task">🔒 <b>睡前任務</b><span class="right">20:30</span></div></div>
+<div class="card wish"><b>🦖 我的心願：去恐龍樂園</b><div class="progress" style="margin:10px 0"><i id="wishProgress" style="width:71%"></i></div><small><span id="wishStars">428</span> / 600 ⭐</small></div>
+</section>
+
+<section id="kidsTask" class="hidden">
+<button class="secondary" id="backKids">← 回今天冒險</button><div class="stepdots" id="dots"></div>
+<div class="card hero"><div class="icon" id="stepIcon">📘</div><h1 id="stepTitle">聯絡簿</h1><p id="stepText">🔊 先把聯絡簿放進書包。</p><button class="primary" id="doneStep">✅ 做好了</button><button class="secondary" id="speakStep" style="margin-top:10px">🔊 再聽一次</button></div>
+<button class="secondary" id="laterBtn">今天有點難？等一下再試</button>
+</section>
+
+<section id="kidsReview" class="hidden">
+<div class="card hero"><div class="icon">🎉</div><h1>整理書包完成！</h1><p>任務完成 +5 ⭐</p></div>
+<div class="choicegrid"><button class="choice selfChoice" data-value="自己完成">😄<b>我自己完成</b></button><button class="choice selfChoice" data-value="有人提醒">🙂<b>有人提醒</b></button><button class="choice selfChoice" data-value="做一部分">😐<b>做一部分</b></button><button class="choice selfChoice" data-value="今天很難">🙁<b>今天很難</b></button></div>
+</section>
+
+<section id="kidsTraining" class="hidden"><div class="card"><h2>🎮 今天的訓練</h2><p>建議 12 分鐘</p></div><div class="card"><h3>🚦 紅綠燈忍者</h3><button class="primary" onclick="toast('Prototype：這裡會進入抑制控制遊戲')">挑戰</button></div><div class="card"><h3>🧠 記憶探險</h3><button class="primary" onclick="toast('Prototype：這裡會進入工作記憶遊戲')">挑戰</button></div></section>
+<section id="kidsGrowth" class="hidden"><div class="card hero"><div class="icon">🧑‍🚀</div><h1>勇者 Lv. 7</h1><div class="progress"><i style="width:78%"></i></div><p>再獲得 50 ⭐ 升級</p></div><div class="card wish"><h3>心願商店</h3><div class="task">🦖 <b>去恐龍樂園</b><span class="right">600 ⭐</span></div><div class="task">📺 <b>特別卡通時間</b><span class="right">200 ⭐</span></div></div></section>
+<section id="kidsCalendar" class="hidden"><div class="card"><h2>📅 九月冒險</h2><div class="calendar" id="cal"></div></div></section>
+
+<nav class="nav" id="kidsNav"><button class="active" data-kid="kidsToday">🏠<br>今日</button><button data-kid="kidsTraining">🎮<br>挑戰</button><button data-kid="kidsGrowth">⭐<br>成長</button><button data-kid="kidsCalendar">📅<br>日曆</button></nav>
+</main>
+
+<main id="parent" class="hidden">
+<section id="parentToday">
+<div class="panelHead"><div><b>家長今日狀況</b><br><small>9 月 19 日 星期六</small></div><span class="badge">家庭版</span></div>
+<div class="card"><div class="parentStats"><div class="stat"><small>任務</small><b>6 / 8</b></div><div class="stat"><small>自主完成</small><b>3</b></div><div class="stat"><small>平均提醒</small><b>1.7 次</b></div><div class="stat"><small>訓練</small><b>12 分鐘</b></div></div></div>
+<div class="card notice"><b>🔔 <span id="reviewCount">1</span> 個任務等待確認</b><button class="primary" id="goReview" style="margin-top:12px">前往確認</button></div>
+<div class="card"><h3>今天值得注意</h3><p>🟢 自己整理書包</p><p>🟡 功課需要提醒 3 次</p><p>🏫 聯絡簿有老師正向回饋</p></div>
+</section>
+
+<section id="parentReview" class="hidden">
+<button class="secondary" id="backParent">← 回今日狀況</button><div class="card hero"><div class="icon">🎒</div><h2>整理書包</h2><p>孩子自評：<b id="childSelf">尚未填寫</b></p></div>
+<button class="reviewBtn" data-review="自己完成">🌟 自己完成</button><button class="reviewBtn" data-review="提醒 1 次">👍 提醒 1 次</button><button class="reviewBtn" data-review="提醒 2～3 次">🙂 提醒 2～3 次</button><button class="reviewBtn" data-review="完成一部分">🟡 完成一部分</button><button class="reviewBtn" data-review="未完成">○ 未完成</button>
+<div class="card"><b>＋ 記一下當時狀況（選填）</b><div class="tags" style="margin-top:12px"><button class="tag">🔔 忘記開始</button><button class="tag">🦋 做到一半分心</button><button class="tag">😑 不太想開始</button><button class="tag">😡 情緒影響</button><button class="tag">😴 很累</button><button class="tag">🤷 不確定</button></div></div>
+</section>
+<nav class="nav" style="grid-template-columns:repeat(5,1fr)"><button class="active">🏠<br>今日</button><button id="navReview">✅<br>確認</button><button onclick="toast('Prototype：任務管理頁')">📋<br>任務</button><button onclick="toast('Prototype：Dashboard 分析頁')">📊<br>分析</button><button onclick="toast('Prototype：更多設定')">⚙️<br>更多</button></nav>
+</main>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+let state={mode:'kids',step:0,self:null,stars:428};
+const steps=[{icon:'📘',title:'聯絡簿',text:'先把聯絡簿放進書包。'},{icon:'✏️',title:'鉛筆盒',text:'接著，把鉛筆盒放進書包。'},{icon:'💧',title:'水壺',text:'把水壺準備好。'},{icon:'📚',title:'明天要帶的書',text:'最後，檢查明天要帶的書。'}];
+function toast(msg){let t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)} window.toast=toast;
+function speak(text){if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang='zh-TW';speechSynthesis.speak(u)}}
+function showKid(id){['kidsToday','kidsTask','kidsReview','kidsGrowth','kidsTraining','kidsCalendar'].forEach(x=>$('#'+x).classList.toggle('hidden',x!==id));$$('#kidsNav button').forEach(b=>b.classList.toggle('active',b.dataset.kid===id))}
+function renderStep(){let s=steps[state.step];$('#stepIcon').textContent=s.icon;$('#stepTitle').textContent=s.title;$('#stepText').textContent='🔊 '+s.text;$('#dots').innerHTML=steps.map((_,i)=>'<span class="'+(i<=state.step?'on':'')+'">●</span>').join(' ')}
+$('#startTask').onclick=()=>{state.step=0;renderStep();showKid('kidsTask');speak('現在來整理書包')};$('#backKids').onclick=()=>showKid('kidsToday');$('#speakStep').onclick=()=>speak(steps[state.step].text);$('#laterBtn').onclick=()=>{toast('任務已保留，稍後可以再回來');showKid('kidsToday')};
+$('#doneStep').onclick=()=>state.step<3?(state.step++,renderStep(),speak(steps[state.step].text)):(showKid('kidsReview'),speak('整理書包完成'));
+$$('.selfChoice').forEach(b=>b.onclick=()=>{state.self=b.dataset.value;$('#childSelf').textContent=state.self;state.stars+=5;$('#stars').textContent=$('#wishStars').textContent=state.stars;$('#wishProgress').style.width=Math.min(100,state.stars/600*100)+'%';toast('任務完成 +5 ⭐，等待家長確認');showKid('kidsToday')});
+$$('#kidsNav button').forEach(b=>b.onclick=()=>showKid(b.dataset.kid));
+for(let i=1;i<=30;i++){let d=document.createElement('div');d.className='day'+([2,3,4,5,8,9,10,12,15,16,18,19].includes(i)?' done':'');d.textContent=([2,4,10,18].includes(i)?'⭐ ':'')+i;$('#cal').appendChild(d)}
+function setMode(m){state.mode=m;$('#kids').classList.toggle('hidden',m!=='kids');$('#parent').classList.toggle('hidden',m!=='parent');$('#modeBtn').textContent=m==='kids'?'👨‍👩‍👦 家長模式':'🧒 孩子模式'}
+$('#modeBtn').onclick=()=>setMode(state.mode==='kids'?'parent':'kids');$('#goReview').onclick=$('#navReview').onclick=()=>{$('#parentToday').classList.add('hidden');$('#parentReview').classList.remove('hidden')};$('#backParent').onclick=()=>{$('#parentReview').classList.add('hidden');$('#parentToday').classList.remove('hidden')};
+$$('.reviewBtn').forEach(b=>b.onclick=()=>{$('#reviewCount').textContent='0';toast('已確認：'+b.dataset.review);$('#parentReview').classList.add('hidden');$('#parentToday').classList.remove('hidden')});$$('.tag').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+</script></body></html>
